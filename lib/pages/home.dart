@@ -44,6 +44,7 @@ class _HomePageState extends State<HomePage> {
   ];
   String _selectedMapUrl = 'https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}';
   bool loadingLocation = false;
+  bool loading = false;
   // double myLatitud = 0.0;
   // double myLongitud = 0.0;
   String? user = '';
@@ -58,6 +59,7 @@ class _HomePageState extends State<HomePage> {
   bool _backgroundStatus = false;
   int _countdown = 10;
   List danceAll = [];
+  String vista = '0';
 
   @override
   void initState() {
@@ -91,6 +93,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   initSocket() async {
+    globals.socket.emit('danceAll');
     globals.socket.connect();
     globals.socket.on('connect', (_) {
       print('Conectado al servidor');
@@ -105,7 +108,10 @@ class _HomePageState extends State<HomePage> {
       // print('danceAll: $data');
       // {cog: {value: 1760}, dancers: [{id: 1, name: GRAN TRADICIONAL AUTENTICA DIABLADA ORURO, imagen: diablada.png, lat: -17.97008232979924, lng: -67.11217403411867, video: W4s7d_4Erwo, history: No hay historia}, {id: 2, name: FRATERNIDAD HIJOS DEL SOL LOS INCAS, imagen: incas.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 3, name: CONJUNTO FOLKLORICO MORENADA ZONA NORTE, imagen: morenada.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 4, name: FRAT. ARTISTICA ZAMPOÑEROS HIJOS DEL PAGADOR, imagen: zamponeros.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 5, name: CENTRO TRADICIONAL NEGRITOS DE PAGADOR, imagen: negritos.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 6, name: CONJUNTO FOLKLORICO AHUATIRIS, imagen: antawaras.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 7, name: CONJUNTO WACA WACAS SAN AGUSTIN DERECHO, imagen: wacatoncoris.png, lat: 0, lng: 0, video: W4s7d_4Erwo
       print( data['dancers']);
+      globals.socket.emit('cogsMore');
       danceAll = data['dancers'];
+      vista = data['cog']['value'].toString();
+      loading = false;
       setState(() {});
     });
   //   this.socket.on('danceOne', (data) => {
@@ -123,6 +129,8 @@ class _HomePageState extends State<HomePage> {
   // })
     globals.socket.on('danceOne', (data) {
       print('danceOne: $data');
+      globals.socket.emit('cogsMore');
+      vista = data['cog']['value'].toString();
       final id = data['id'];
       final findDancer = danceAll.firstWhere((d) => double.parse(d['id'].toString()) == double.parse(id.toString()), orElse: () => {});
       if (findDancer != null) {
@@ -266,7 +274,7 @@ class _HomePageState extends State<HomePage> {
               mapController: _mapController,
               options: MapOptions(
                 initialCenter: LatLng(-17.965, -67.1125),
-                initialZoom: 16.0,
+                initialZoom: 15.0,
                 maxZoom: 21.0,
               ),
               children: [
@@ -339,62 +347,128 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                // Positioned(
-                //     top: 30,
-                //     left: 15,
-                //     child: Column(
-                //         crossAxisAlignment: CrossAxisAlignment.start,
-                //         children: [
-                //           Row(
-                //             children: [
-                //               Icon(Icons.person, color: Colors.black),
-                //               Text(' ' + user! ?? '',
-                //                   style: TextStyle(
-                //                       fontSize: 20,
-                //                       color: Colors.black,
-                //                       fontWeight: FontWeight.bold)),
-                //             ],
-                //           ),
-                //           ElevatedButton.icon(
-                //             onPressed: () async {
-                //               // confirm
-                //               // await DatabaseHelper().logout();
-                //               // Navigator.pushReplacementNamed(context, '/');
-                //               showDialog(
-                //                 context: context,
-                //                 builder: (BuildContext context) {
-                //                   return AlertDialog(
-                //                     title: Text('Cerrar sesión'),
-                //                     content:
-                //                         Text('¿Estás seguro de cerrar sesión?'),
-                //                     actions: [
-                //                       TextButton(
-                //                         onPressed: () {
-                //                           Navigator.pop(context);
-                //                         },
-                //                         child: Text('Cancelar'),
-                //                       ),
-                //                       TextButton(
-                //                         onPressed: () async {
-                //                           await DatabaseHelper().logout();
-                //                           Navigator.pushReplacementNamed(
-                //                               context, '/');
-                //                         },
-                //                         child: Text('Aceptar'),
-                //                       ),
-                //                     ],
-                //                   );
-                //                 },
-                //               );
-                //             },
-                //             icon: Icon(Icons.logout, color: Colors.white),
-                //             label: Text('Cerrar sesión'),
-                //             style: ElevatedButton.styleFrom(
-                //               backgroundColor: Colors.red, // background
-                //               foregroundColor: Colors.white, // foreground
-                //             ),
-                //           ),
-                //         ])),
+                Positioned(
+                    top: 50,
+                    left: 15,
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Morenada Central',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Container(
+                            padding: EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Image.asset('assets/images/logoCentral.png', width: 100, height: 100)
+                          ),
+                          SizedBox(height: 10),
+                          ElevatedButton.icon(
+                            // onPressed: () async {
+                            //   globals.socket.emit('danceAll');
+                            // },
+                            onPressed: () async {
+                              setState(() {
+                                loading = true;
+                              });
+                              // await linesGet();
+                              globals.socket.emit('danceAll');
+                            },
+                            icon: Icon(Icons.refresh, color: Colors.white),
+                            label: loading ? CircularProgressIndicator() : Text('Actualizar'),
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> states) {
+                                  if (states.contains(MaterialState.pressed)) {
+                                    return Colors.green.shade700; // Color más oscuro cuando se presiona
+                                  }
+                                  return Colors.green; // Color normal
+                                },
+                              ),
+                              foregroundColor: MaterialStateProperty.all(Colors.white),
+                              elevation: MaterialStateProperty.resolveWith<double>(
+                                    (Set<MaterialState> states) {
+                                  if (states.contains(MaterialState.pressed)) {
+                                    return 2.0; // Menos elevación cuando se presiona
+                                  }
+                                  return 6.0; // Elevación normal
+                                },
+                              ),
+                              shape: MaterialStateProperty.all(
+                                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Chip(
+                            label: Text(
+                                'Vistas '+ vista,
+                                style: TextStyle(color: Colors.white)
+                            ),
+                            avatar: CircleAvatar(
+                              backgroundColor: Colors.redAccent,
+                              child: Icon(Icons.remove_red_eye,color: Colors.white),
+                            ),
+                            backgroundColor: Colors.redAccent,
+                            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          ),
+                          // Row(
+                          //   children: [
+                          //     Icon(Icons.person, color: Colors.black),
+                          //     Text(' ' + user! ?? 'asas',
+                          //         style: TextStyle(
+                          //             fontSize: 20,
+                          //             color: Colors.black,
+                          //             fontWeight: FontWeight.bold)),
+                          //   ],
+                          // ),
+                          // ElevatedButton.icon(
+                          //   onPressed: () async {
+                          //     // confirm
+                          //     // await DatabaseHelper().logout();
+                          //     // Navigator.pushReplacementNamed(context, '/');
+                          //     showDialog(
+                          //       context: context,
+                          //       builder: (BuildContext context) {
+                          //         return AlertDialog(
+                          //           title: Text('Cerrar sesión'),
+                          //           content:
+                          //               Text('¿Estás seguro de cerrar sesión?'),
+                          //           actions: [
+                          //             TextButton(
+                          //               onPressed: () {
+                          //                 Navigator.pop(context);
+                          //               },
+                          //               child: Text('Cancelar'),
+                          //             ),
+                          //             TextButton(
+                          //               onPressed: () async {
+                          //                 await DatabaseHelper().logout();
+                          //                 Navigator.pushReplacementNamed(
+                          //                     context, '/');
+                          //               },
+                          //               child: Text('Aceptar'),
+                          //             ),
+                          //           ],
+                          //         );
+                          //       },
+                          //     );
+                          //   },
+                          //   icon: Icon(Icons.logout, color: Colors.white),
+                          //   label: Text('Cerrar sesión'),
+                          //   style: ElevatedButton.styleFrom(
+                          //     backgroundColor: Colors.red, // background
+                          //     foregroundColor: Colors.white, // foreground
+                          //   ),
+                          // ),
+                        ])),
                 Positioned(
                   top: 20,
                   right: 20,
@@ -457,6 +531,8 @@ class _HomePageState extends State<HomePage> {
                         child: IconButton(
                           onPressed: () {
                             _mapController.rotate(0.0);
+                            _mapController.move(LatLng(-17.965, -67.1125), 15.0);
+                            // LatLng(-17.965, -67.1125)
                           },
                           icon: Icon(Icons.navigation),
                         ),
