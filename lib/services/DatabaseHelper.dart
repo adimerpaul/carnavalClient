@@ -42,6 +42,33 @@ class DatabaseHelper{
         timestamp TEXT
       )
     ''');
+
+    // dancer CREATE TABLE `dancers` (
+    //   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+    //   `name` varchar(255) NOT NULL,
+    //   `imagen` varchar(255) NOT NULL,
+    //   `lat` varchar(255) NOT NULL DEFAULT '0',
+    //   `lng` varchar(255) NOT NULL DEFAULT '0',
+    //   `video` varchar(255) DEFAULT 'W4s7d_4Erwo',
+    //   `history` text DEFAULT 'No hay historia',
+    //   `positionSaturday` int(11) DEFAULT NULL,
+    //   `positionSunday` int(11) DEFAULT NULL,
+    //   `created_at` timestamp NULL DEFAULT NULL,
+    //   `updated_at` timestamp NULL DEFAULT NULL,
+    //   PRIMARY KEY (`id`)
+    // ) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+    await db.execute('''
+      CREATE TABLE dancers(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        imagen TEXT,
+        lat TEXT,
+        lng TEXT,
+        video TEXT,
+        history TEXT
+      )
+    ''');
   }
   // lineas
   Future lineas() async {

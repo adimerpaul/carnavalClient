@@ -57,6 +57,7 @@ class _HomePageState extends State<HomePage> {
   Timer? _timer;
   bool _backgroundStatus = false;
   int _countdown = 10;
+  List danceAll = [];
 
   @override
   void initState() {
@@ -66,7 +67,7 @@ class _HomePageState extends State<HomePage> {
     getPath().then((value) => print(value));
     // moveteCamaraMyLocationAnimate();
     linesGet();
-    getUser();
+    // getUser();
     final service = FlutterBackgroundService();
     service.on('updateLocation').listen((event) {
       if (event != null) {
@@ -85,6 +86,51 @@ class _HomePageState extends State<HomePage> {
           _countdown = event['countdown'];
         });
       }
+    });
+    initSocket();
+  }
+
+  initSocket() async {
+    globals.socket.connect();
+    globals.socket.on('connect', (_) {
+      print('Conectado al servidor');
+      globals.swSocket = true;
+    });
+    globals.socket.on('disconnect', (_) {
+      print('Desconectado del servidor');
+      globals.swSocket = false;
+    });
+    // danceAll
+    globals.socket.on('danceAll', (data) {
+      // print('danceAll: $data');
+      // {cog: {value: 1760}, dancers: [{id: 1, name: GRAN TRADICIONAL AUTENTICA DIABLADA ORURO, imagen: diablada.png, lat: -17.97008232979924, lng: -67.11217403411867, video: W4s7d_4Erwo, history: No hay historia}, {id: 2, name: FRATERNIDAD HIJOS DEL SOL LOS INCAS, imagen: incas.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 3, name: CONJUNTO FOLKLORICO MORENADA ZONA NORTE, imagen: morenada.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 4, name: FRAT. ARTISTICA ZAMPOÑEROS HIJOS DEL PAGADOR, imagen: zamponeros.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 5, name: CENTRO TRADICIONAL NEGRITOS DE PAGADOR, imagen: negritos.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 6, name: CONJUNTO FOLKLORICO AHUATIRIS, imagen: antawaras.png, lat: 0, lng: 0, video: W4s7d_4Erwo, history: No hay historia}, {id: 7, name: CONJUNTO WACA WACAS SAN AGUSTIN DERECHO, imagen: wacatoncoris.png, lat: 0, lng: 0, video: W4s7d_4Erwo
+      print( data['dancers']);
+      danceAll = data['dancers'];
+      setState(() {});
+    });
+  //   this.socket.on('danceOne', (data) => {
+  //   this.$store.loading = false
+  //   // console.log('danceOne', data)
+  //   const id = data.id
+  //   const findDancer = this.$store.dancers.find((d) => parseInt(d.id) === parseInt(id))
+  //   if (findDancer) {
+  //     findDancer.lat = data.lat
+  //     findDancer.lng = data.lng
+  //   }
+  //   this.$store.cog = data.cog.value
+  //   // por socket aumentar el contador de cogs
+  //   this.socket.emit('cogsMore')
+  // })
+    globals.socket.on('danceOne', (data) {
+      print('danceOne: $data');
+      final id = data['id'];
+      final findDancer = danceAll.firstWhere((d) => double.parse(d['id'].toString()) == double.parse(id.toString()), orElse: () => {});
+      if (findDancer != null) {
+        print('findDancer: $findDancer');
+        findDancer['lat'] = double.parse(data['lat'].toString()).toString();
+        findDancer['lng'] = double.parse(data['lng'].toString()).toString();
+      }
+      setState(() {});
     });
   }
 
@@ -153,7 +199,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> moveteCamaraMyLocationAnimate() async {
     final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-    _mapController.move(LatLng(position.latitude, position.longitude), 18.0);
+    _mapController.move(LatLng(position.latitude, position.longitude), 16.0);
     globals.latitude = position.latitude;
     globals.longitude = position.longitude;
     setState(() {
@@ -220,7 +266,7 @@ class _HomePageState extends State<HomePage> {
               mapController: _mapController,
               options: MapOptions(
                 initialCenter: LatLng(-17.965, -67.1125),
-                initialZoom: 14.0,
+                initialZoom: 16.0,
                 maxZoom: 21.0,
               ),
               children: [
@@ -246,6 +292,40 @@ class _HomePageState extends State<HomePage> {
                 ),
                 MarkerLayer(
                   markers: [
+                    for (var item in danceAll)
+                      Marker(
+                        width: 120.0,
+                        height: 80.0, // Aumenta la altura suficiente para el contenido
+                        point: LatLng(double.parse(item['lat']), double.parse(item['lng'])),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min, // Permite que la columna tome solo el espacio necesario
+                          children: [
+                            Image.asset('assets/images/${item['imagen']}', width: 40, height: 40),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1), // Reduce el padding
+                              child: Center(
+                                child: Text(
+                                  item['name'],
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.black,
+                                    backgroundColor: Color(0xFFf9bb61),
+                                    height: 0.9, // Reduce la altura de línea (default es 1.2 - 1.5)
+                                    letterSpacing: -0.2, // Opcional: Reduce el espaciado entre letras
+                                  ),
+                                ),
+                              ),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFf9bb61),
+                                borderRadius: BorderRadius.circular(3), // Reduce el radio si se ve muy grande
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     Marker(
                       width: 80.0,
                       height: 80.0,
@@ -258,67 +338,70 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                Positioned(
-                    top: 30,
-                    left: 15,
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(Icons.person, color: Colors.black),
-                              Text(' ' + user! ?? '',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold)),
-                            ],
-                          ),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              // confirm
-                              // await DatabaseHelper().logout();
-                              // Navigator.pushReplacementNamed(context, '/');
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: Text('Cerrar sesión'),
-                                    content:
-                                        Text('¿Estás seguro de cerrar sesión?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text('Cancelar'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () async {
-                                          await DatabaseHelper().logout();
-                                          Navigator.pushReplacementNamed(
-                                              context, '/');
-                                        },
-                                        child: Text('Aceptar'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
-                            icon: Icon(Icons.logout, color: Colors.white),
-                            label: Text('Cerrar sesión'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red, // background
-                              foregroundColor: Colors.white, // foreground
-                            ),
-                          ),
-                        ])),
+                // Positioned(
+                //     top: 30,
+                //     left: 15,
+                //     child: Column(
+                //         crossAxisAlignment: CrossAxisAlignment.start,
+                //         children: [
+                //           Row(
+                //             children: [
+                //               Icon(Icons.person, color: Colors.black),
+                //               Text(' ' + user! ?? '',
+                //                   style: TextStyle(
+                //                       fontSize: 20,
+                //                       color: Colors.black,
+                //                       fontWeight: FontWeight.bold)),
+                //             ],
+                //           ),
+                //           ElevatedButton.icon(
+                //             onPressed: () async {
+                //               // confirm
+                //               // await DatabaseHelper().logout();
+                //               // Navigator.pushReplacementNamed(context, '/');
+                //               showDialog(
+                //                 context: context,
+                //                 builder: (BuildContext context) {
+                //                   return AlertDialog(
+                //                     title: Text('Cerrar sesión'),
+                //                     content:
+                //                         Text('¿Estás seguro de cerrar sesión?'),
+                //                     actions: [
+                //                       TextButton(
+                //                         onPressed: () {
+                //                           Navigator.pop(context);
+                //                         },
+                //                         child: Text('Cancelar'),
+                //                       ),
+                //                       TextButton(
+                //                         onPressed: () async {
+                //                           await DatabaseHelper().logout();
+                //                           Navigator.pushReplacementNamed(
+                //                               context, '/');
+                //                         },
+                //                         child: Text('Aceptar'),
+                //                       ),
+                //                     ],
+                //                   );
+                //                 },
+                //               );
+                //             },
+                //             icon: Icon(Icons.logout, color: Colors.white),
+                //             label: Text('Cerrar sesión'),
+                //             style: ElevatedButton.styleFrom(
+                //               backgroundColor: Colors.red, // background
+                //               foregroundColor: Colors.white, // foreground
+                //             ),
+                //           ),
+                //         ])),
                 Positioned(
                   top: 20,
                   right: 20,
                   child: Column(
                     children: [
+                      SizedBox(
+                        height: 20,
+                      ),
                       Container(
                         padding: EdgeInsets.only(left: 10, right: 10),
                         decoration: BoxDecoration(
@@ -378,22 +461,22 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       //   bbootn de mandar ubicacion
-                      ElevatedButton.icon(
-                        icon: Icon(Icons.send, color: Colors.white),
-                        onPressed: _backGround,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _backgroundStatus
-                              ? Colors.red
-                              : Colors.green, // Cambia el color
-                          foregroundColor:
-                          Colors.white, // Cambia el color del texto
-                        ),
-                        label: Text(
-                          _backgroundStatus
-                              ? 'Enviando (${_countdown})'
-                              : 'Mandar ',
-                        ),
-                      ),
+                      // ElevatedButton.icon(
+                      //   icon: Icon(Icons.send, color: Colors.white),
+                      //   onPressed: _backGround,
+                      //   style: ElevatedButton.styleFrom(
+                      //     backgroundColor: _backgroundStatus
+                      //         ? Colors.red
+                      //         : Colors.green, // Cambia el color
+                      //     foregroundColor:
+                      //     Colors.white, // Cambia el color del texto
+                      //   ),
+                      //   label: Text(
+                      //     _backgroundStatus
+                      //         ? 'Enviando (${_countdown})'
+                      //         : 'Mandar ',
+                      //   ),
+                      // ),
                     ],
                   ),
                 )
