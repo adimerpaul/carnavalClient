@@ -295,35 +295,36 @@ class _HomePageState extends State<HomePage> {
                     for (var item in danceAll)
                       Marker(
                         width: 120.0,
-                        height: 80.0, // Aumenta la altura suficiente para el contenido
+                        height: 75.0,
                         point: LatLng(double.parse(item['lat']), double.parse(item['lng'])),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min, // Permite que la columna tome solo el espacio necesario
-                          children: [
-                            Image.asset('assets/images/${item['imagen']}', width: 40, height: 40),
-                            Container(
-                              padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1), // Reduce el padding
-                              child: Center(
-                                child: Text(
-                                  item['name'],
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: FontWeight.bold,
-                                    fontStyle: FontStyle.italic,
-                                    color: Colors.black,
-                                    backgroundColor: Color(0xFFf9bb61),
-                                    height: 0.9, // Reduce la altura de línea (default es 1.2 - 1.5)
-                                    letterSpacing: -0.2, // Opcional: Reduce el espaciado entre letras
+                        child: Transform.translate(
+                          offset: Offset(20, 20), // Ajusta el desplazamiento hacia arriba
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min, // Evita que la columna crezca innecesariamente
+                            children: [
+                              Image.asset('assets/images/${item['imagen']}', width: 40, height: 40),
+                              Container(
+                                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                child: Center(
+                                  child: Text(
+                                    item['name'],
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      fontStyle: FontStyle.italic,
+                                      color: Colors.black,
+                                      height: 1.1,
+                                    ),
                                   ),
                                 ),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFf9bb61),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
                               ),
-                              decoration: BoxDecoration(
-                                color: Color(0xFFf9bb61),
-                                borderRadius: BorderRadius.circular(3), // Reduce el radio si se ve muy grande
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     Marker(
