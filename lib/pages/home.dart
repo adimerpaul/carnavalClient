@@ -268,6 +268,11 @@ class _HomePageState extends State<HomePage> {
       //   ),
       // ),
       child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+          },
+          child: Image.asset('assets/images/morenadafull.png', width: 100, height: 100),
+        ),
           backgroundColor: Colors.grey[400],
           body: Stack(children: [
             FlutterMap(
